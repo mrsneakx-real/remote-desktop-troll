@@ -15,17 +15,15 @@ import java.util.function.Function;
 public class RpcServer {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    // Each method maps to a handler that takes the request and returns a result node (or null)
     private final Map<String, Function<JsonNode, JsonNode>> methods = new HashMap<>();
 
     public RpcServer() {
         methods.put("insertText", this::handleInsertText);
+        methods.put("getAdminStatus", this::handleGetAdminStatus);
     }
 
-    // Your real server-side function (business logic)
     private void insertText(String message) {
         System.out.println("insertText(message) called with: " + message);
-        // Insert it wherever you need (DB, list, UI model, file, etc.)
     }
 
     private JsonNode handleInsertText(JsonNode req) {
@@ -37,10 +35,42 @@ public class RpcServer {
 
         insertText(message);
 
-        // Optional: return something meaningful
         ObjectNode result = MAPPER.createObjectNode();
         result.put("stored", true);
+        result.put("message", "insertText executed with: " + message);
         return result;
+    }
+
+    private JsonNode handleGetAdminStatus(JsonNode req) {
+        ObjectNode result = MAPPER.createObjectNode();
+        result.put("isAdmin", isRunningAsAdmin());
+        result.put("message", "Admin status checked");
+        return result;
+    }
+
+    private boolean isRunningAsAdmin() {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        try {
+            if (os.contains("win")) {
+                Process p = new ProcessBuilder("cmd", "/c", "net", "session")
+                        .redirectErrorStream(true)
+                        .start();
+                int exit = p.waitFor();
+                return exit == 0;
+            } else {
+                Process p = new ProcessBuilder("id", "-u")
+                        .redirectErrorStream(true)
+                        .start();
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String uid = r.readLine();
+                    p.waitFor();
+                    return "0".equals(uid);
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public void start(int port) throws IOException {
