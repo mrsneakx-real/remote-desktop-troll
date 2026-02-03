@@ -38,13 +38,24 @@ public class DashboradA {
         Label serverIpLabel = new Label("Server IP:");
         TextField serverIpField = new TextField("127.0.0.1");
         serverIpField.setPromptText("e.g. 192.168.0.1");
+        Label serverPortLabel = new Label("Port:");
+        TextField serverPortField = new TextField("9000");
+        serverIpField.setPromptText("e.g. 9000");
+
+        Label emptyLabel = new Label("");
 
         Button connectButton = new Button("Connect");
         Button disconnectButton = new Button("Disconnect");
         Button quitButton = new Button("Quit");
         disconnectButton.setDisable(true);
 
-        HBox connectionRow = new HBox(10, serverIpLabel, serverIpField, connectButton, disconnectButton, quitButton);
+        VBox serverAdress = new VBox(10, serverIpLabel, serverIpField);
+        VBox serverPort = new VBox(10, serverPortLabel, serverPortField);
+
+        HBox restUiHorizontal = new HBox(10, connectButton, disconnectButton, quitButton);
+        VBox restUiVertical = new VBox(10, emptyLabel, restUiHorizontal);
+
+        HBox connectionRow = new HBox(10, serverAdress, serverPort, restUiVertical);
         connectionRow.setPadding(new Insets(0, 0, 10, 0));
 
         // ---- Modular fields ----
@@ -75,7 +86,19 @@ public class DashboradA {
         // Connect action
         connectButton.setOnAction(evt -> {
             String ip = serverIpField.getText().trim();
-            connect(statusLabel, console, ip, 9000, connectButton, disconnectButton, button1, button2, button3);
+            String portString = serverPortField.getText();
+
+            int portInt;
+
+            try {
+                portInt = Integer.parseInt(portString);
+                System.out.println("Parsed: " + portInt);
+            } catch (NumberFormatException e) {
+                System.out.println("Not a valid integer: " + portString);
+                portInt = 9000;
+                System.out.println("Using default: " + portInt);
+            }
+            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, button1, button2, button3);
         });
 
         // Disconnect action

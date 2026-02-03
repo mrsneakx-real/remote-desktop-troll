@@ -10,7 +10,7 @@ public class AppMain extends Application {
     @Override
     public void start(Stage stage) {
         DashboradA dash = new DashboradA();
-        Scene scene = new Scene(dash.createView(), 700, 300);
+        Scene scene = new Scene(dash.createView(), 700, 500);
 
         stage.setTitle("Client Dashboard");
         stage.setScene(scene);
