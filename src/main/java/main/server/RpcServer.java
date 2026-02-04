@@ -4,18 +4,30 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import javax.net.ssl.*;
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 public class RpcServer {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Map<String, Function<JsonNode, JsonNode>> methods = new HashMap<>();
+
+    private final ExecutorService clientExecutor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "rpc-client-handler");
+        t.setDaemon(false); // server should stay alive until stopped
+        return t;
+    });
+
+    private volatile SSLServerSocket serverSocket;
 
     public RpcServer() {
         methods.put("insertText", this::handleInsertText);
@@ -29,9 +41,7 @@ public class RpcServer {
     private JsonNode handleInsertText(JsonNode req) {
         JsonNode params = req.path("params");
         String message = params.path("message").asText(null);
-        if (message == null) {
-            throw new IllegalArgumentException("params.message is required");
-        }
+        if (message == null) throw new IllegalArgumentException("params.message is required");
 
         insertText(message);
 
@@ -50,37 +60,66 @@ public class RpcServer {
 
     private boolean isRunningAsAdmin() {
         String os = System.getProperty("os.name").toLowerCase();
-
         try {
             if (os.contains("win")) {
-                Process p = new ProcessBuilder("cmd", "/c", "net", "session")
-                        .redirectErrorStream(true)
-                        .start();
-                int exit = p.waitFor();
-                return exit == 0;
-            } else {
-                Process p = new ProcessBuilder("id", "-u")
-                        .redirectErrorStream(true)
-                        .start();
-                try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                    String uid = r.readLine();
-                    p.waitFor();
-                    return "0".equals(uid);
-                }
+                Process p = new ProcessBuilder("cmd", "/c", "net", "session").redirectErrorStream(true).start();
+                return p.waitFor() == 0;
+            }
+            Process p = new ProcessBuilder("id", "-u").redirectErrorStream(true).start();
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                String uid = r.readLine();
+                p.waitFor();
+                return "0".equals(uid);
             }
         } catch (Exception e) {
             return false;
         }
     }
 
-    public void start(int port) throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("RPC server listening on port " + port);
-            while (true) {
-                Socket socket = serverSocket.accept();
-                new Thread(() -> handleClient(socket)).start();
-            }
+    private SSLServerSocket createTlsServerSocket(int port) throws Exception {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream("src/main/java/main/server/server-keystore.jks")) {
+            ks.load(fis, "changeit".toCharArray());
         }
+
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        kmf.init(ks, "changeit".toCharArray());
+
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(kmf.getKeyManagers(), null, null);
+
+        SSLServerSocketFactory ssf = ctx.getServerSocketFactory();
+        return (SSLServerSocket) ssf.createServerSocket(port);
+    }
+
+    public void start(int port) throws IOException {
+        try (SSLServerSocket ss = createTlsServerSocket(port)) {
+            serverSocket = ss;
+            System.out.println("RPC TLS server listening on port " + port);
+
+            while (!ss.isClosed()) {
+                try {
+                    SSLSocket socket = (SSLSocket) ss.accept();
+                    clientExecutor.execute(() -> handleClient(socket));
+                } catch (SocketException e) {
+                    // accept() unblocked because socket closed during stop()
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to start TLS server: " + e.getMessage(), e);
+        } finally {
+            stop();
+        }
+    }
+
+    public void stop() {
+        SSLServerSocket ss = serverSocket;
+        serverSocket = null;
+        if (ss != null && !ss.isClosed()) {
+            try { ss.close(); } catch (IOException ignored) {}
+        }
+        clientExecutor.shutdownNow();
     }
 
     private void handleClient(Socket socket) {
@@ -117,12 +156,13 @@ public class RpcServer {
                 out.write("\n");
                 out.flush();
             }
-        } catch (IOException e) {
-            System.out.println("Client error: " + e.getMessage());
+        } catch (IOException ignored) {
         }
     }
 
     public static void main(String[] args) throws IOException {
-        new RpcServer().start(9000);
+        RpcServer server = new RpcServer();
+        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        server.start(9000);
     }
 }

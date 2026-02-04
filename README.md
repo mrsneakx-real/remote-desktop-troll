@@ -101,6 +101,26 @@ open PowerShell and run: Start-Process -FilePath "C:\path\to\RDT-Server.exe" (ru
 //To ensure full functionality, we strongly recommend that you also run the client as an administrator.
 ```
 
+### Stop the app (IDE)
+```bash
+./gradlew --stop
+
+//This stops all processes. If you dont use this command two stray JRE processes remain an take about 700 Mb of memory.
+```
+
+### Stop the app (jar/exe)
+```bash
+Close all JRE instances related to this app
+
+or
+
+open Powershell and first run: Get-Process java, javaw -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, Path
+
+after that run: Get-Process java, javaw -ErrorAction SilentlyContinue | Stop-Process -Force
+
+//Note that the command closes ALL java/javaw processes, even ones not related to this app.
+```
+
 ---
 
 ## Configuration Reference

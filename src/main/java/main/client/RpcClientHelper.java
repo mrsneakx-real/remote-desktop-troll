@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RpcClientHelper implements Closeable {
@@ -18,12 +20,31 @@ public class RpcClientHelper implements Closeable {
     private final AtomicInteger nextId = new AtomicInteger(1);
 
     public RpcClientHelper(String host, int port) throws IOException {
-        this.socket = new Socket(host, port);
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        try {
+            this.socket = createTlsSocket(host, port);
+            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new IOException("Failed to create TLS socket: " + e.getMessage(), e);
+        }
     }
 
-    // Simple RPC call with params JSON object
+    private SSLSocket createTlsSocket(String host, int port) throws Exception {
+        KeyStore ts = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream("src/main/java/main/client/client-truststore.jks")) {
+            ts.load(fis, "changeit".toCharArray());
+        }
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+        tmf.init(ts);
+
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(null, tmf.getTrustManagers(), null);
+
+        SSLSocketFactory sf = ctx.getSocketFactory();
+        return (SSLSocket) sf.createSocket(host, port);
+    }
+
     public synchronized JsonNode call(String method, ObjectNode params) throws IOException {
         int id = nextId.getAndIncrement();
 
@@ -36,7 +57,7 @@ public class RpcClientHelper implements Closeable {
         out.write("\n");
         out.flush();
 
-        String reply = in.readLine();          // one-line JSON response
+        String reply = in.readLine();
         return MAPPER.readTree(reply);
     }
 

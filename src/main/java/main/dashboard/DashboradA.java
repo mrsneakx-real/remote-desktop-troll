@@ -34,7 +34,6 @@ public class DashboradA {
         console.setPrefRowCount(6);
         console.setMinHeight(120);
 
-        // ---- Server connection row (IP + connect + disconnect) ----
         Label serverIpLabel = new Label("Server IP:");
         TextField serverIpField = new TextField("127.0.0.1");
         serverIpField.setPromptText("e.g. 192.168.0.1");
@@ -58,7 +57,6 @@ public class DashboradA {
         HBox connectionRow = new HBox(10, serverAdress, serverPort, restUiVertical);
         connectionRow.setPadding(new Insets(0, 0, 10, 0));
 
-        // ---- Modular fields ----
         GridPane formGrid = new GridPane();
         formGrid.setHgap(10);
         formGrid.setVgap(10);
@@ -67,7 +65,6 @@ public class DashboradA {
         TextField field2 = addFieldRow(formGrid, 1, "Example2");
         TextField field3 = addFieldRow(formGrid, 2, "Example3");
 
-        // ---- Modular buttons ----
         Button button1 = createActionButton("Example1");
         Button button2 = createActionButton("Example2");
         Button button3 = createActionButton("Example3");
@@ -83,38 +80,28 @@ public class DashboradA {
 
         VBox.setVgrow(console, Priority.ALWAYS);
 
-        // Connect action
         connectButton.setOnAction(evt -> {
             String ip = serverIpField.getText().trim();
             String portString = serverPortField.getText();
 
             int portInt;
-
             try {
                 portInt = Integer.parseInt(portString);
-                System.out.println("Parsed: " + portInt);
             } catch (NumberFormatException e) {
-                System.out.println("Not a valid integer: " + portString);
                 portInt = 9000;
-                System.out.println("Using default: " + portInt);
             }
+
             connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, button1, button2, button3);
         });
 
-        // Disconnect action
         disconnectButton.setOnAction(evt ->
                 disconnect(statusLabel, console, connectButton, disconnectButton, button1, button2, button3)
         );
 
-        //Quit Button
-        quitButton.setOnAction(evt ->
-                shutdownClient()
-        );
+        quitButton.setOnAction(evt -> shutdownClient());
 
-        // Enter in IP field triggers connect
         serverIpField.setOnAction(evt -> connectButton.fire());
 
-        // Button handlers
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
         button2.setOnAction(evt -> callServer(statusLabel, console, "insertText", field2.getText()));
         button3.setOnAction(evt -> callServer(statusLabel, console, "insertText", field3.getText()));
@@ -257,22 +244,22 @@ public class DashboradA {
 
         console.setText(next);
 
-        // Always scroll to bottom
         console.positionCaret(console.getLength());
         console.setScrollTop(Double.MAX_VALUE);
     }
 
-    private void shutdownClient() {
+    // Made public so AppMain can call it from stop()/onCloseRequest
+    public void shutdownClient() {
         // Close RPC connection
         if (rpc != null) {
             try { rpc.close(); } catch (Exception ignored) {}
             rpc = null;
         }
 
-        // Stop background executor
+        // Stop background executor (this thread keeps the JVM alive if not shutdown)
         rpcExecutor.shutdownNow();
 
-        // Close JavaFX application (but not the server)
+        // Ensure JavaFX actually exits when window closes
         Platform.exit();
     }
 }
