@@ -30,6 +30,7 @@ You can find a feature list below.
 
 ## Roadmap
 - [ ] Add encryption
+- [ ] Add admin token
 - [ ] Add more documentation
 - [ ] Sending and receiving
 - [ ] Improve GUI
@@ -37,8 +38,8 @@ You can find a feature list below.
 ---
 
 # Software Information
-- **Language:** [Java 25](https://www.oracle.com/java/technologies/downloads/#java25)
-- **Build tool:** [Gradle](https://gradle.org/)
+- **Language:** [Java 21](https://www.oracle.com/java/technologies/downloads/#java21)
+- **Build tool:** [Gradle 8.7](https://gradle.org/)
 - **Framework:** Java & [JavaFX](https://www.oracle.com/javase/javafx/)
 - **IDE:** [IntelliJ](https://www.jetbrains.com/idea/download/?section=windows) by [JetBrains](https://www.jetbrains.com/)
 - **Testing:** Java & User tests
@@ -46,8 +47,8 @@ You can find a feature list below.
 ## Requirements
 
 ### If running in an IDE *(experimental way, no guarantee)*
-- **Java:** 25 
-- **Gradle:** 9.2.0
+- **Java:** 21
+- **Gradle:** 8.7
 - **Administrator privileges** (optional but highly recommended)
 ### If running as exe *(recommended way)*
 - Windows 11 OS
@@ -58,14 +59,14 @@ Verify for running in an IDE:
 
 java -version
 
-[Java(TM) SE Runtime Environment (build 25.0.1)]
+[Java(TM) SE Runtime Environment (build 21.0.10)]
 ```
 ```bash
 //Check Gradle version
 
 ./gradlew --version
 
-[Gradle 9.2.0]
+[Gradle 8.7]
 ```
 
 
