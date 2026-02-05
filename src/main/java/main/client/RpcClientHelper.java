@@ -31,7 +31,7 @@ public class RpcClientHelper implements Closeable {
 
     private SSLSocket createTlsSocket(String host, int port) throws Exception {
         KeyStore ts = KeyStore.getInstance("JKS");
-        try (FileInputStream fis = new FileInputStream("src/main/java/main/client/client-truststore.jks")) {
+        try (FileInputStream fis = new FileInputStream("src/main/resources/client-truststore.jks")) {
             ts.load(fis, "changeit".toCharArray());
         }
 

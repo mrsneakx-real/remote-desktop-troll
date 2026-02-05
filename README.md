@@ -29,7 +29,7 @@ You can find a feature list below.
 - [Exe](#getting-started)
 
 ## Roadmap
-- [ ] Add encryption
+- [x] Add encryption
 - [ ] Add admin token
 - [ ] Add more documentation
 - [ ] Sending and receiving

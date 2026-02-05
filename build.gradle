@@ -45,10 +45,14 @@ test {
 
 // Fat JAR including dependencies and resources
 jar {
+    archiveBaseName.set('RemoteDesktopTroll')// Your custom base name
+    archiveVersion.set('0.1.1')// If you want no version in file name
+    archiveClassifier.set('')
+
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 
     manifest {
-        attributes 'Main-Class': 'main.Launcher'
+        attributes 'Main-Class': 'main.ClientLauncher'
     }
 
     // Include all runtime deps
@@ -60,4 +64,70 @@ jar {
     from('src/main/resources') {
         into('')
     }
+}
+
+tasks.register('ServerFatJar', Jar) {
+    archiveBaseName.set('Server')
+    archiveClassifier.set('all')      // -> Server-all-1.0.jar
+    archiveVersion.set('0.1.3')         // or '' if you prefer
+
+    // If multiple jars have the same META-INF/* files, just keep the first
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // 1) Your compiled classes + resources
+    from(sourceSets.main.output)
+
+    // 2) All runtime dependencies (Jackson etc.)
+    from({
+        configurations.runtimeClasspath
+                .filter { it.name.endsWith('jar') }
+                .collect { zipTree(it) }
+    })
+
+    // (Optional) Explicitly ensure keystore is present
+    from('src/main/resources') {
+        include 'server-keystore.jks'
+        include 'client-truststore.jks'
+    }
+
+    manifest {
+        attributes(
+                'Main-Class': 'main.ServerLauncher'
+        )
+    }
+
+    destinationDirectory.set(file("$buildDir/libs"))
+}
+
+tasks.register('ClientFatJar', Jar) {
+    archiveBaseName.set('Client')
+    archiveClassifier.set('all')      // -> Server-all-1.0.jar
+    archiveVersion.set('0.1.3')         // or '' if you prefer
+
+    // If multiple jars have the same META-INF/* files, just keep the first
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // 1) Your compiled classes + resources
+    from(sourceSets.main.output)
+
+    // 2) All runtime dependencies (Jackson etc.)
+    from({
+        configurations.runtimeClasspath
+                .filter { it.name.endsWith('jar') }
+                .collect { zipTree(it) }
+    })
+
+    // (Optional) Explicitly ensure keystore is present
+    from('src/main/resources') {
+        include 'server-keystore.jks'
+        include 'client-truststore.jks'
+    }
+
+    manifest {
+        attributes(
+                'Main-Class': 'main.ClientLauncher'
+        )
+    }
+
+    destinationDirectory.set(file("$buildDir/libs"))
 }

