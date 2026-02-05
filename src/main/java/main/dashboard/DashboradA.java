@@ -103,7 +103,7 @@ public class DashboradA {
         serverIpField.setOnAction(evt -> connectButton.fire());
 
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
-        button2.setOnAction(evt -> callServer(statusLabel, console, "insertText", field2.getText()));
+        button2.setOnAction(evt -> callServer(statusLabel, console, "runCmdIgnoreErrors", field2.getText()));
         button3.setOnAction(evt -> callServer(statusLabel, console, "insertText", field3.getText()));
 
         return root;
