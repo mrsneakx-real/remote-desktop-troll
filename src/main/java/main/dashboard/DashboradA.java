@@ -74,8 +74,11 @@ public class DashboradA {
         VBox buttonBox = new VBox(10, button1, button2, button3);
         buttonBox.setPrefWidth(120);
 
+        Button clearConsoleButton = new Button("Clear Console");
+        clearConsoleButton.setOnAction(evt -> console.clear());
+
         HBox mainLayout = new HBox(20, formGrid, buttonBox);
-        VBox root = new VBox(15, titleLabel, connectionRow, statusLabel, mainLayout, console);
+        VBox root = new VBox(15, titleLabel, connectionRow, statusLabel, mainLayout, clearConsoleButton, console);
         root.setPadding(new Insets(20));
 
         VBox.setVgrow(console, Priority.ALWAYS);
