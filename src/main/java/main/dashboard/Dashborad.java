@@ -17,14 +17,15 @@ import main.client.RpcClientHelper;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DashboradA {
+public class Dashborad {
 
     private RpcClientHelper rpc;
     private final ExecutorService rpcExecutor = Executors.newSingleThreadExecutor();
 
-    public Parent createView() {
-        Label titleLabel = new Label("Admin Dashboard");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+    public Parent createView() throws Exception {
+        Label titleLabel = new Label("Control Dashboard");
+        titleLabel.getStyleClass().add("title-label");
+        //titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         Label statusLabel = new Label("Not connected");
 
@@ -107,9 +108,36 @@ public class DashboradA {
         serverIpField.setOnAction(evt -> connectButton.fire());
 
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
-        button2.setOnAction(evt -> callServer(statusLabel, console, "runCmdIgnoreErrors", field2.getText()));
+
+        /// Button 2 handler & etc.
+        CheckForBlacklist checker;
+        try {
+            checker = new CheckForBlacklist("src/main/resources/blacklist/blacklist.json");
+        } catch (Exception e) {
+            try {
+                checker = new CheckForBlacklist("blacklist/blacklist.json");
+            } catch (Exception ex) {
+                appendConsole(console, "Could not load blacklist: " + ex.getMessage());
+                checker = null;
+            }
+        }
+        // Button action (make sure checker != null)
+        CheckForBlacklist finalChecker = checker;
+        button2.setOnAction(evt -> {
+            String userCmd = field2.getText();
+            if (finalChecker != null && finalChecker.isCommandAllowed(userCmd)) {
+                callServer(statusLabel, console, "runCmdIgnoreErrors", userCmd);
+            } else if (finalChecker != null) {
+                appendConsole(console, "Blocked dangerous command: " + userCmd);
+            } else {
+                appendConsole(console, "Blacklist checker not initialized.");
+            }
+        });
+
         button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", field3.getText()));
         button4.setOnAction(evt -> callServer(statusLabel, console, "runKillTaskmngrAndExp", field4.getText()));
+
+        //runCmdIgnoreErrors
 
         return root;
     }

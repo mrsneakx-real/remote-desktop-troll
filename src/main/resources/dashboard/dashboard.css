@@ -1,0 +1,93 @@
+/* Root background */
+.root {
+    -fx-background-color: #f7fafd;
+}
+
+/* Title label */
+/*.label {*/
+/*    -fx-font-size: 13.5px;*/
+/*}*/
+
+.title-label {
+    -fx-font-family: Calibri;
+    -fx-font-size: 28px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1e293b;
+    -fx-padding: 0 0 10 0;
+}
+
+/* Status label coloring (updates inline, but add some defaults) */
+#status {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 0 0 10 0;
+}
+
+/* Fields */
+.text-field {
+    -fx-border-radius: 5;
+    -fx-background-color: #eef2f5;
+    -fx-padding: 7 10 7 10;
+    -fx-font-size: 13px;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
+}
+.text-field:focused {
+    -fx-border-color: #318cfb;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: linear-gradient(to bottom, #3498db, #1976d2);
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-padding: 8 24 8 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian,rgba(80,90,120,0.15),2,0,0,1.5);
+}
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #1976d2, #1663a6);
+}
+.button:disabled {
+    -fx-background-color: #bdc3c7;
+    -fx-text-fill: #e8ecef;
+    -fx-opacity: 1;
+}
+.button:hover {
+    -fx-background-color: #1976D2;
+}
+
+/* Special color for 'Clear Console' button */
+.button[text="Clear Console"] {
+    -fx-background-color: #f44336;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+}
+.button[text="Clear Console"]:hover {
+    -fx-background-color: #d32f2f;
+}
+
+/* Text area/console */
+.text-area {
+    -fx-background-radius: 10;
+    -fx-background-color: #fcfdfe;
+    -fx-border-color: #b3b9c8;
+    -fx-border-width: 1.1;
+    -fx-padding: 8;
+    -fx-font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #19222c;
+}
+
+/* Grid and layouts */
+.grid-pane, .hbox, .vbox {
+    -fx-background-color: transparent;
+}
+
+.hbox {
+    -fx-spacing: 12;
+}
+.vbox {
+    -fx-spacing: 14;
+}

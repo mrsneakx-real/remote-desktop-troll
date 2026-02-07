@@ -3,16 +3,18 @@ package main;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import main.dashboard.DashboradA;
+import main.dashboard.Dashborad;
 
 public class AppMain extends Application {
 
-    private DashboradA dash;
+    private Dashborad dash;
 
     @Override
-    public void start(Stage stage) {
-        dash = new DashboradA();
-        Scene scene = new Scene(dash.createView(), 700, 500);
+    public void start(Stage stage) throws Exception {
+        dash = new Dashborad();
+        Scene scene = new Scene(dash.createView(), 800, 700);
+
+        scene.getStylesheets().add(getClass().getResource("/dashboard/dashboard.css").toExternalForm());
 
         stage.setTitle("Client Dashboard");
         stage.setScene(scene);
