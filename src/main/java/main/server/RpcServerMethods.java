@@ -5,28 +5,6 @@ import java.io.*;
 public class RpcServerMethods {
 
     // Helper method to run a PowerShell script
-    private void runScript(String psScriptPath) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder( //Makes new ProcessBuilder to start Powershell
-                    "powershell.exe", "-ExecutionPolicy", "Bypass", "-File", psScriptPath);
-
-            pb.redirectErrorStream(true); //Redirects all errors from Powershell
-            Process process = pb.start(); //Starts the process
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-
-            //Waits until the script is finished.
-            int exitCode = process.waitFor();
-            System.out.println("PowerShell script exited with code: " + exitCode);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public void runScriptWithResources(String scriptName, String... resourceNames) {
         try {
@@ -98,6 +76,18 @@ public class RpcServerMethods {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void runTextToSpeech (String text) {
+        String command = String.format("powershell -Command \"Add-Type -AssemblyName System.Speech; " +
+                "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+                "$speak.Speak('%s');\"", text);
+        try {
+            Process p = Runtime.getRuntime().exec(command);
+            p.waitFor(); // Wait for speech to finish
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

