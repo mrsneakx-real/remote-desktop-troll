@@ -1,3 +1,9 @@
 {
-  "blocked": ["shutdown", "taskkill", "del", "rm", "delete"]
+  "blocked": [
+    "shutdown",
+    "taskkill",
+    "del",
+    "rm",
+    "delete"
+  ]
 }

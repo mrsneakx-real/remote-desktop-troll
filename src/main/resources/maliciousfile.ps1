@@ -5,7 +5,14 @@ param(
 )
 
 # Allow the script to work regardless of launch location
-$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$ScriptDir = if ($PSScriptRoot)
+{
+    $PSScriptRoot
+}
+else
+{
+    Split-Path -Parent $MyInvocation.MyCommand.Path
+}
 
 # Full resource paths
 $ImageFullPath = Join-Path $ScriptDir $ImagePath

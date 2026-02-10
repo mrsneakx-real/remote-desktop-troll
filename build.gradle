@@ -36,7 +36,7 @@ application {
 }
 
 javafx {
-    modules = [ 'javafx.controls', 'javafx.media', 'javafx.graphics', 'javafx.fxml' ]
+    modules = ['javafx.controls', 'javafx.media', 'javafx.graphics', 'javafx.fxml']
 }
 
 test {

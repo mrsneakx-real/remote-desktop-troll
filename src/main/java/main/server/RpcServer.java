@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
-import main.server.RpcServerMethods;
 
 public class RpcServer {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -217,7 +216,10 @@ public class RpcServer {
         SSLServerSocket ss = serverSocket;
         serverSocket = null;
         if (ss != null && !ss.isClosed()) {
-            try { ss.close(); } catch (IOException ignored) {}
+            try {
+                ss.close();
+            } catch (IOException ignored) {
+            }
         }
         clientExecutor.shutdownNow();
     }
